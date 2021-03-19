@@ -1,6 +1,10 @@
 name: uni_links_example
 description: Demonstrates how to use the uni_links plugin.
 
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ^2.0.1
+  
 dependencies:
   flutter:
     sdk: flutter

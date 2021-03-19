@@ -36,7 +36,7 @@ void main() {
   });
 
   test('getLinksStream', () async {
-    Stream<String> stream = getLinksStream();
+    Stream<String> stream = getLinksStream()!;
     expect(stream, isInstanceOf<Stream<String>>());
   });
 

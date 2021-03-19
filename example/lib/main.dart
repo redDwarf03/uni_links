@@ -16,14 +16,14 @@ enum UniLinksType { string, uri }
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   String _latestLink = 'Unknown';
-  Uri _latestUri;
+  late Uri _latestUri;
 
-  StreamSubscription _sub;
+  late StreamSubscription _sub;
 
-  TabController _tabController;
+  late TabController _tabController;
   UniLinksType _type = UniLinksType.string;
 
-  final List<String> _cmds = getCmds();
+  final List<String> _cmds = getCmds()!;
   final TextStyle _cmdStyle = const TextStyle(
       fontFamily: 'Courier', fontSize: 12.0, fontWeight: FontWeight.w700);
   final _scaffoldKey = new GlobalKey<ScaffoldState>();
@@ -56,25 +56,23 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   /// An implementation using a [String] link
   initPlatformStateForStringUniLinks() async {
     // Attach a listener to the links stream
-    _sub = getLinksStream().listen((String link) {
+    _sub = getLinksStream()!.listen((String link) {
       if (!mounted) return;
       setState(() {
         _latestLink = link ?? 'Unknown';
-        _latestUri = null;
         try {
-          if (link != null) _latestUri = Uri.parse(link);
+          _latestUri = Uri.parse(link);
         } on FormatException {}
       });
     }, onError: (err) {
       if (!mounted) return;
       setState(() {
         _latestLink = 'Failed to get latest link: $err.';
-        _latestUri = null;
       });
     });
 
     // Attach a second listener to the stream
-    getLinksStream().listen((String link) {
+    getLinksStream()!.listen((String link) {
       print('got link: $link');
     }, onError: (err) {
       print('got err: $err');
@@ -87,24 +85,22 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     try {
       initialLink = await getInitialLink();
       print('initial link: $initialLink');
-      if (initialLink != null) initialUri = Uri.parse(initialLink);
+      initialUri = Uri.parse(initialLink);
+
+      // If the widget was removed from the tree while the asynchronous platform
+      // message was in flight, we want to discard the reply rather than calling
+      // setState to update our non-existent appearance.
+      if (!mounted) return;
+
+      setState(() {
+        _latestLink = initialLink;
+        _latestUri = initialUri;
+      });
     } on PlatformException {
       initialLink = 'Failed to get initial link.';
-      initialUri = null;
     } on FormatException {
       initialLink = 'Failed to parse the initial link as Uri.';
-      initialUri = null;
     }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _latestLink = initialLink;
-      _latestUri = initialUri;
-    });
   }
 
   /// An implementation using the [Uri] convenience helpers
@@ -114,19 +110,18 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       if (!mounted) return;
       setState(() {
         _latestUri = uri;
-        _latestLink = uri?.toString() ?? 'Unknown';
+        _latestLink = uri.toString();
       });
     }, onError: (err) {
       if (!mounted) return;
       setState(() {
-        _latestUri = null;
         _latestLink = 'Failed to get latest link: $err.';
       });
     });
 
     // Attach a second listener to the stream
     getUriLinksStream().listen((Uri uri) {
-      print('got uri: ${uri?.path} ${uri?.queryParametersAll}');
+      print('got uri: ${uri.path} ${uri.queryParametersAll}');
     }, onError: (err) {
       print('got err: $err');
     });
@@ -136,27 +131,25 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     String initialLink;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      initialUri = await getInitialUri();
+      initialUri = (await getInitialUri())!;
       print('initial uri: ${initialUri?.path}'
           ' ${initialUri?.queryParametersAll}');
-      initialLink = initialUri?.toString();
+      initialLink = initialUri.toString();
+
+      // If the widget was removed from the tree while the asynchronous platform
+      // message was in flight, we want to discard the reply rather than calling
+      // setState to update our non-existent appearance.
+      if (!mounted) return;
+
+      setState(() {
+        _latestUri = initialUri;
+        _latestLink = initialLink;
+      });
     } on PlatformException {
-      initialUri = null;
       initialLink = 'Failed to get initial uri.';
     } on FormatException {
-      initialUri = null;
       initialLink = 'Bad parse the initial link as Uri.';
     }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _latestUri = initialUri;
-      _latestLink = initialLink;
-    });
   }
 
   @override
@@ -262,13 +255,13 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     print(cmd);
 
     await Clipboard.setData(new ClipboardData(text: cmd));
-    _scaffoldKey.currentState.showSnackBar(new SnackBar(
+    _scaffoldKey.currentState!.showSnackBar(new SnackBar(
       content: const Text('Copied to Clipboard'),
     ));
   }
 }
 
-List<String> getCmds() {
+List<String>? getCmds() {
   String cmd;
   String cmdSuffix = '';
 
